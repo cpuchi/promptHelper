@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Prompt Helper</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<style>
+		#link{
+			margin: 0 0 7px 0;
+		}
+		#title{
+			margin: 0 0 15px 0;
+		}
+		.removeSection {
+			color: red;
+		}
+		.response {
+			margin: 10px 0;
+		}
+		#titleText {
+			cursor: pointer;
+		}
+		#titleInput {
+			font-family: serif;
+			display: none; 
+			font-size: 32px;
+			font-weight: bold;
+		}
+	</style>
+	<script type="text/javascript">
+		function setupPage(){
+			if (document.getElementById("responses").children.length === 0){
+				addPrompt();
+			}
+			setState();
+		}
+		function setState(){
+			document.lastState = document.documentElement.innerHTML;
+		}
+
+		function addPrompt(){
+			document.getElementById("responses").insertAdjacentHTML("beforeend",''+
+				'<div class="response">'+
+					'Prompt: <br><textarea rows="3" cols="50" class="prompt save"></textarea><br>'+
+					'Response:<br>'+
+					'<textarea rows="10" cols="50" class="responseText save"></textarea>'+
+					'<br>'+
+					'Words: <span class="words">0</span>; Characters: <span class="characters">0</span>'+
+					'<br>'+
+					'<button class="removeSection" onclick="removeSection(this)">-Remove prompt and response</button>'+
+				'</div>'
+			);
+		}
+		function countChars(body){
+			return body.length;
+		}
+		function countWords(body){
+			var split = body.split(" ");
+			var count = 0;
+			split.forEach(function(word){
+				if (word.length > 0) count += 1;
+			});
+			return count;
+		}
+
+		document.onkeyup = function(e){
+			var input = e.target;
+			if (input.className.indexOf("response") > -1){
+				var children = input.parentNode.children;
+				for (var i = 0; i < children.length; i++){
+					var child = children.item(i);
+					if (child.className.indexOf("characters") > -1){
+						child.textContent = input.value.length;
+					}
+					if (child.className.indexOf("words") > -1){
+						child.textContent = countWords(input.value);
+					}
+				}
+			}
+
+			if (input.className.indexOf("save") > -1){
+				input.innerHTML = input.value;
+				input.prev = input.value;
+			}
+
+			if (input.id === "titleInput"){
+				if (e.keyCode === 13) {
+					input.blur();
+					return;
+				}
+				document.getElementById("titleText").innerHTML = input.value;
+			}
+
+			if (input.id === "link"){
+				var go = document.getElementById("goto");
+				if (input.value !== ""){
+					var hrefValue = input.value;
+					if (hrefValue.indexOf("http")===-1){
+						hrefValue = "http://" + hrefValue;
+					}
+					var outer = go.outerHTML;
+					var index = outer.indexOf("href");
+					if (index === -1){
+						index = outer.indexOf(">"+go.innerHTML)
+					}
+					outer = outer.substring(0, index) + 'href="' + hrefValue + '">' + go.innerHTML + "</a>";
+					go.outerHTML = outer;
+				}
+				else {
+					var outer = go.outerHTML;
+					var index = outer.indexOf('href');f
+					if (index > -1){
+						outer = outer.substring(0, outer.indexOf("href")) + ">" + go.innerHTML + "</a>"
+						go.outerHTML = outer;
+					}
+				}
+			}
+		}
+
+		function removeSection(element){
+			var response = element.parentNode;
+			var children = response.children;
+			var hasValue = false;
+			for (var i = 0; !hasValue && i < children.length; i++){
+				var child = children.item(i);
+				if (child.type === "textarea"){
+					if (child.value !== ""){
+						hasValue = true;
+					}
+				}
+			}
+
+			if(hasValue){
+				var confirmed = confirm("Are you sure you want to delete the prompt and response?");
+				if (!confirmed) return;
+			}
+
+			var responses = response.parentNode;
+			responses.removeChild(response);
+		}
+
+		function changeTitle(){
+			var title = document.getElementById("titleText");
+			var titleText = title.textContent;
+			title.prev = titleText;
+			title.style.display = "none";
+			var titleInput = document.getElementById("titleInput");
+			titleInput.value = titleText;
+			document.getElementById("titleInput").style.display = "block";
+			titleInput.focus();
+		}
+
+		function showTitle(input){
+			var title = document.getElementById("titleText");
+			if (title.innerHTML === ""){
+				title.innerHTML = "Click to change title";
+			}
+			title.style.display = "block";
+			input.style.display = "none";
+
+			document.title = title.textContent;
+		}
+
+		function save(){
+			var html = document.documentElement.innerHTML;
+			var uri = "data:text/html;charset=utf-8," + escape(html);
+
+			var downloadLink = document.createElement("a");
+			downloadLink.href = uri;
+			downloadLink.download = document.title + ".html";
+
+			document.body.appendChild(downloadLink);
+			downloadLink.click();
+			document.body.removeChild(downloadLink);
+
+			document.lastState = html;
+		}
+
+		window.onbeforeunload = function (e) {
+			var current = removeBodyClasses(document.documentElement.innerHTML);
+			var last = removeBodyClasses(document.lastState);
+			if (current !== last){
+				document.lastState = document.documentElement.innerHTML;
+			  	return "You have made changes to this page."
+			}
+		};
+
+		function removeBodyClasses(html){
+			return html.replace(/<body onload="setupPage\(\)" .*?>/, '<body onload="setupPage()">');
+		};
+	</script>
+</head>
+<body onload="setupPage()">
+	<div id="title">
+		<h1 id="titleText" onclick="changeTitle()">Click to change title</h1>
+		<input id="titleInput" onblur=showTitle(this)></input>
+	</div>
+	<a id="goto">Link</a>:<br><textarea rows="1" cols="50" id="link" class="save" width="339px"></textarea>
+	<div id="responses">
+<!-- 		<div class="response">
+			Prompt: <br><textarea rows="3" cols="50" class="prompt save"></textarea><br>
+			Response:<br>
+			<textarea rows="10" cols="50" class="responseText save"></textarea>
+			<br>
+			Words: <span class="words">0</span>; Characters: <span class="characters">0</span>
+			<br>
+			<button class="removeSection" onclick="removeSection(this)">-Remove prompt and response</button>
+		</div> -->
+	</div>
+	<button id="addPrompt" onclick="addPrompt()">+Add another prompt</button>
+	<button id="save" onclick="save()">Save Page</button>
+</body>
+</html>
