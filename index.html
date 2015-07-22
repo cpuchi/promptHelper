@@ -74,7 +74,7 @@
 					'<textarea rows="8" cols="0" class="promptInput save" onblur="showPrompt(this)"></textarea><br>'+
 					'<textarea rows="8" cols="0" class="responseText save"></textarea>'+
 					'<br>'+
-					'<div class="text wordcount">Words: <span class="words">0</span>; Characters: <span class="characters">0</span></div>'+
+					'<div class="text wordcount">Words: <span class="words">0</span>; Characters: <span class="characters">0</span>; Characters (no spaces) <span class="charactersNoSpaces">0</span></div>'+
 					'<button class="removeSection text" onclick="removeSection(this)">-Remove prompt and response</button>'+
 				'</div>'
 			);
@@ -97,6 +97,8 @@
 				var parent = input.parentNode;
 				parent.getElementsByClassName('characters')[0].textContent = input.value.length;
 				parent.getElementsByClassName('words')[0].textContent = countWords(input.value);
+				console.log(input.value.replace(/ /g, ""));
+				parent.getElementsByClassName('charactersNoSpaces')[0].textContent = input.value.replace(/ /g, "").length;
 			}
 
 			if (input.className.indexOf("save") > -1){
